@@ -19,7 +19,7 @@ impl std::error::Error for FilePathError {
     fn description(&self) -> &str {
         &match *self {
             FilePathError::InvalidPath(_) => "Invalid path, file not found",
-            FilePathError::FileReadError(_,_) => "Error during file reading"
+            FilePathError::FileReadError(_, _) => "Error during file reading"
         }
     }
 }
@@ -46,7 +46,7 @@ impl From<std::io::Error> for FilePathError {
     fn from(e: std::io::Error) -> Self {
         match e.kind() {
             IoErrorKind::NotFound => FilePathError::InvalidPath("File not found".to_owned()),
-            _ => FilePathError::FileReadError("N/A".to_owned(),e)
+            _ => FilePathError::FileReadError("N/A".to_owned(), e)
         }
     }
 }
@@ -79,7 +79,7 @@ pub fn inline_html_string<P: AsRef<Path>>(html: &str, root_path: P, inline_fonts
     let mut is_alright: Result<(), FilePathError> = Ok(());
     let out_html = link_finder.replace_all(html, |caps: &Captures| {
         let css_path = root_path.join(&caps[1]);
-
+        //println!("{:?}", css_path);
         let css_data = match fs::read_to_string(&css_path) {
             Ok(css_data) => url_finder.replace(css_data.as_str(), |caps: &Captures|
                 format!("url({})", css_path.parent().unwrap().join(&caps[1]).to_str().expect("Path not UTF-8")
@@ -94,8 +94,15 @@ pub fn inline_html_string<P: AsRef<Path>>(html: &str, root_path: P, inline_fonts
         }
         let css_data = if inline_fonts {
             font_url_finder.replace_all(css_data.as_str(), |caps: &Captures| {
-                match fs::read(&caps[2]) {
-                    Ok(font_data) => format!("${}data:application/font-woff;charset=utf-8;base64,{}{}", &caps[1], base64::encode(&font_data), &caps[3]),
+                let font_path = Path::new(&caps[2]);
+                match fs::read(font_path) {
+                    Ok(font_data) => format!("{before}{font_type}charset=utf-8;base64,{data}{after}", before = &caps[1], font_type = match font_path.extension().unwrap_or_default().to_str().unwrap_or_default() {
+                        "woff" => "data:application/font-woff;",
+                        "woff2" => "data:application/font-woff2;",
+                        "otf" => "data:font/opentype;",
+                        "ttf" => "data:application/font-ttf;",
+                        _ => "data:application/font-ttf;"
+                    }, data = base64::encode(&font_data), after = &caps[3]),
                     Err(e) => {
                         is_alright = Err(FilePathError::from_elem(e, &caps[0]));
                         return "Error".to_owned();
