@@ -12,6 +12,7 @@ categories = ["web-programming"]
 
 [badges]
 maintenance = { status = "passively-maintained" }
+travis-ci = { repository = "https://travis-ci.org/Hand-of-Cthulhu/inline-assets-rs", branch = "master" }
 
 [[example]]
 name = "html_inliner"
