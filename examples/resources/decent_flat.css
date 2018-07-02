@@ -1,0 +1,48 @@
+@font-face {
+    font-family: 'source-sans';
+    src: url(another_sub_dir/sourcesanspro-regular-webfont.woff) format("woff");
+}
+
+body {
+    font-family: "source-sans", serif;
+    font-size: 10pt;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    background-color: #CCC;
+    color: #222;
+}
+
+p {
+    cursor: default;
+}
+
+#port_num {
+    width: 50px;
+}
+
+button {
+    width: auto;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    position: absolute;
+    border: none;
+    background-color: #7d81ff;
+    color: #EEE;
+}
+
+button:hover {
+    background-color: #a9a7ff
+}
+
+input, label {
+    display: block;
+}
+
+#is_connected {
+    margin-left: 20px;
+    font-family: Consolas, monospace;
+}

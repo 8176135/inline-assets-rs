@@ -1,0 +1,17 @@
+[package]
+name = "inline_assets"
+version = "0.1.0"
+authors = ["Hand-of-Cthulhu <3rdhandofcthulhu@gmail.com>"]
+
+[[example]]
+name = "html_inliner"
+
+[lib]
+name = "inline_assets"
+
+[dependencies]
+regex="1.0.*"
+base64 = "0.9.*"
+
+[dev-dependencies]
+clap="*"
