@@ -120,7 +120,6 @@ pub fn inline_html_string<P: AsRef<Path>>(html: &str, root_path: P, inline_fonts
         return Err(is_alright.unwrap_err());
     }
 
-
     // TODO: Support type tags in output
     let out_html = script_finder.replace_all(out_html.as_str(), |caps: &Captures| {
         format!("<script>{}</script>", match fs::read_to_string(root_path.join(&caps[1])) {
@@ -138,3 +137,4 @@ pub fn inline_html_string<P: AsRef<Path>>(html: &str, root_path: P, inline_fonts
 
     Ok(out_html)
 }
+

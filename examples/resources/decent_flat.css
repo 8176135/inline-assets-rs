@@ -1,6 +1,6 @@
 @font-face {
     font-family: 'source-sans';
-    src: url(another_sub_dir/sourcesanspro-regular-webfont.woff) format("woff");
+    src: url(another_sub_dir/sourcesanspro-regular-webfont.woff2) format("woff");
 }
 
 body {
