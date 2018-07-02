@@ -89,6 +89,7 @@ pub fn inline_html_string<P: AsRef<Path>>(html: &str, root_path: P, inline_fonts
         //println!("{:?}", css_path);
         let css_data = match inline_css(&css_path, &mut css_path_set) {
             Ok(css_data) => css_data,
+            Err(FilePathError::RepeatedFile) => "".to_owned(),
             Err(e) => {
                 is_alright = Err(e);
                 return "Error".to_owned();
