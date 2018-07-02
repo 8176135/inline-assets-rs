@@ -4,6 +4,8 @@ extern crate base64;
 use std::fs;
 use std::io::ErrorKind as IoErrorKind;
 use std::path::Path;
+use std::collections::HashSet;
+
 use regex::Captures;
 
 /// Augmented std::io::Error so that it shows what line is causing the problem.
@@ -13,13 +15,16 @@ pub enum FilePathError {
     InvalidPath(String),
     /// Any other file read error that is not NotFound
     FileReadError(String, std::io::Error),
+    /// A css file is imported twice, or there is a dependency loop
+    RepeatedFile
 }
 
 impl std::error::Error for FilePathError {
     fn description(&self) -> &str {
         &match *self {
             FilePathError::InvalidPath(_) => "Invalid path, file not found",
-            FilePathError::FileReadError(_, _) => "Error during file reading"
+            FilePathError::FileReadError(_, _) => "Error during file reading",
+            FilePathError::RepeatedFile => "File is imported twice, or there is a circular dependency"
         }
     }
 }
@@ -28,7 +33,8 @@ impl std::fmt::Display for FilePathError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
             FilePathError::InvalidPath(ref line) => write!(f, "Invalid path: {}", line),
-            FilePathError::FileReadError(ref cause, ref io_err) => write!(f, "Cause: {}, File read error: {}", cause, io_err)
+            FilePathError::FileReadError(ref cause, ref io_err) => write!(f, "Cause: {}, File read error: {}", cause, io_err),
+            FilePathError::RepeatedFile => write!(f, "A file is imported twice, or there is a circular dependency")
         }
     }
 }
@@ -74,24 +80,21 @@ pub fn inline_html_string<P: AsRef<Path>>(html: &str, root_path: P, inline_fonts
     let link_finder = regex::Regex::new(r#"<link[^>]+?href\s*=\s*['"]([^"']+)['"][^>]*?>"#).unwrap(); // Finds css <link href="path"> tags
     let script_finder = regex::Regex::new(r#"<script[^>]+?src\s*=\s*['"]([^"']+?)['"][^>]*?>\s*?</\s*?script\s*?>"#).unwrap(); // Finds javascript <script src="path"></script> tags
     let font_url_finder = regex::Regex::new(r#"(@font-face[\s]*?\{[^}]*?src:[\s]*?url\()("?[^()'"]+?"?)(\))"#).unwrap(); // Finds @font-face { src: url(path) } in the css
-    let url_finder = regex::Regex::new(r#"url\s*?\(([^"')]+?)\)"#).unwrap(); // Finds all url(path) in the css and makes them relative to the html file
 
     let mut is_alright: Result<(), FilePathError> = Ok(());
+    let mut css_path_set: HashSet<std::path::PathBuf> = HashSet::new();
+
     let out_html = link_finder.replace_all(html, |caps: &Captures| {
         let css_path = root_path.join(&caps[1]);
         //println!("{:?}", css_path);
-        let css_data = match fs::read_to_string(&css_path) {
-            Ok(css_data) => url_finder.replace(css_data.as_str(), |caps: &Captures|
-                format!("url({})", css_path.parent().unwrap().join(&caps[1]).to_str().expect("Path not UTF-8")
-                    .replace("\\", "/"))).to_string(),
+        let css_data = match inline_css(&css_path, &mut css_path_set) {
+            Ok(css_data) => css_data,
             Err(e) => {
-                is_alright = Err(FilePathError::from_elem(e, &caps[0]));
+                is_alright = Err(e);
                 return "Error".to_owned();
             }
         };
-        if is_alright.is_err() {
-            return "".to_owned();
-        }
+
         let css_data = if inline_fonts {
             font_url_finder.replace_all(css_data.as_str(), |caps: &Captures| {
                 let font_path = Path::new(&caps[2]);
@@ -120,7 +123,7 @@ pub fn inline_html_string<P: AsRef<Path>>(html: &str, root_path: P, inline_fonts
         return Err(is_alright.unwrap_err());
     }
 
-    // TODO: Support type tags in output
+//     TODO: Support type tags in output
     let out_html = script_finder.replace_all(out_html.as_str(), |caps: &Captures| {
         format!("<script>{}</script>", match fs::read_to_string(root_path.join(&caps[1])) {
             Ok(res) => res,
@@ -136,5 +139,44 @@ pub fn inline_html_string<P: AsRef<Path>>(html: &str, root_path: P, inline_fonts
     }
 
     Ok(out_html)
+}
+
+fn inline_css<P: AsRef<Path>>(css_path: P, path_set: &mut HashSet<std::path::PathBuf>) -> Result<String, FilePathError> {
+    let css_path = css_path.as_ref();
+    if !path_set.insert(css_path.canonicalize().map_err(|e| FilePathError::from_elem(e, css_path.to_str().unwrap()))?) {
+        return Err(FilePathError::RepeatedFile)
+    }
+
+    // Some optimisation could be done here if we don't initialize these every single time.
+    let css_finder: regex::Regex = regex::Regex::new(r#"@import[\s]+url\(["']?([^"']+)["']?\)\s*;"#).unwrap(); // Finds all @import url(style.css)
+    let url_finder = regex::Regex::new(r#"url\s*?\(["']?([^"')]+?)["']?\)"#).unwrap(); // Finds all url(path) in the css and makes them relative to the html file
+
+    let mut is_alright: Result<(), FilePathError> = Ok(());
+    let css_data = css_finder.replace_all(
+        url_finder.replace_all(
+            &fs::read_to_string(&css_path).map_err(|e| FilePathError::from_elem(e, css_path.to_str().unwrap()))?,
+            |caps: &Captures| {
+                format!("url({})", if (caps[1].as_ref() as &str).contains("://") { caps[1].to_owned() } else {
+                    css_path.parent().unwrap().join(&caps[1]).to_str().expect("Path not UTF-8").replace("\\", "/")
+                })
+            }).as_ref(),
+        |caps: &Captures| {
+            match inline_css(&caps[1], path_set) {
+                Ok(out) => out,
+                Err(FilePathError::RepeatedFile) => {
+                    "".to_owned() // Ignore repeated file
+                },
+                Err(e) => {
+                    is_alright = Err(e);
+                    return "Error".to_owned();
+                },
+            }
+        }).to_string();
+
+    if is_alright.is_err() {
+        return Err(is_alright.unwrap_err());
+    }
+
+    Ok(css_data)
 }
 

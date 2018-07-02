@@ -1,0 +1,20 @@
+<html>
+<head>
+    <link href="./decent_flat_import.css" rel="stylesheet" >
+</head>
+<body>
+<p style="overflow:hidden; max-height: 43px"><b>Status: </b> <span id="is_connected">Not listening</span></p>
+<form>
+    <label for="port_num">Port:</label>
+    <input type="number" name="port_num" id="port_num" max="65500" min="1" placeholder="13111">
+    <br><br>
+    <button type=submit onclick="external.invoke('listen ' + valOrPlaceholder(document.getElementById('port_num')))">Listen</button>
+</form>
+<script src="js_to_inline.js"></script>
+<script type="text/javascript">
+    function showConnectedMsg(e) {
+        document.getElementById('is_connected').innerHTML = e;
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+@font-face {
+    font-family: 'source-sans-black';
+    src: url(../SourceSansPro-Black.otf) format("woff");
+}
+
+body {
+    background-image: url("https://i.imgur.com/SoqAxJR.png");
+}
