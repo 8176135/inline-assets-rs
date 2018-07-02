@@ -12,7 +12,7 @@ keywords = ["inline", "html", "assets", "build"]
 categories = ["web-programming"]
 
 [badges]
-maintenance = { status = "passively-maintained" }
+maintenance = { status = "actively-developed" }
 travis-ci = { repository = "Hand-of-Cthulhu/inline-assets-rs", branch = "master" }
 
 [[example]]
