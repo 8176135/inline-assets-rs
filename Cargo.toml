@@ -1,6 +1,6 @@
 [package]
 name = "inline_assets"
-version = "0.1.4"
+version = "0.2.0"
 description = "A Rust library for inlining Javascript, CSS, and font files into your html files for easy distribution."
 readme = "README.md"
 license = "MIT"
