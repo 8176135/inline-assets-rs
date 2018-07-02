@@ -1,7 +1,17 @@
 [package]
 name = "inline_assets"
-version = "0.1.0"
+version = "0.1.1"
+description = "A Rust library for inlining Javascript, CSS, and font files into your html files for easy distribution."
+readme = "README.md"
+license = "MIT"
 authors = ["Hand-of-Cthulhu <3rdhandofcthulhu@gmail.com>"]
+exclude = ["examples/*"]
+repository = "https://github.com/Hand-of-Cthulhu/inline-assets-rs"
+keywords = ["inline", "html", "assets", "build"]
+categories = ["web-programming"]
+
+[badges]
+maintenance = { status = "passively-maintained" }
 
 [[example]]
 name = "html_inliner"

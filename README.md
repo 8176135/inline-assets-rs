@@ -1,4 +1,4 @@
-inline_assets
+inline-assets-rs
 =====
 A Rust library for inlining Javascript, CSS, and font files into your html files for easy distribution.
 This also changes `url(path)` in the css to be relative to the html file
