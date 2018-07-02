@@ -7,12 +7,13 @@ license = "MIT"
 authors = ["Hand-of-Cthulhu <3rdhandofcthulhu@gmail.com>"]
 exclude = ["examples/*"]
 repository = "https://github.com/Hand-of-Cthulhu/inline-assets-rs"
+homepage = "https://github.com/Hand-of-Cthulhu/inline-assets-rs"
 keywords = ["inline", "html", "assets", "build"]
 categories = ["web-programming"]
 
 [badges]
 maintenance = { status = "passively-maintained" }
-travis-ci = { repository = "https://travis-ci.org/Hand-of-Cthulhu/inline-assets-rs", branch = "master" }
+travis-ci = { repository = "Hand-of-Cthulhu/inline-assets-rs", branch = "master" }
 
 [[example]]
 name = "html_inliner"
