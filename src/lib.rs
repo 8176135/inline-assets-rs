@@ -157,6 +157,9 @@ fn inline_css<P: AsRef<Path>>(css_path: P, path_set: &mut HashSet<std::path::Pat
         url_finder.replace_all(
             &fs::read_to_string(&css_path).map_err(|e| FilePathError::from_elem(e, css_path.to_str().unwrap()))?,
             |caps: &Captures| {
+                if caps[1].len() > 1500 || caps[1].contains("data:") { // Probably not a path if longer than 1500 characters
+                    return caps[0].to_owned();
+                }
                 format!("url({})", if (caps[1].as_ref() as &str).contains("://") { caps[1].to_owned() } else {
                     css_path.parent().unwrap().join(&caps[1]).to_str().expect("Path not UTF-8").replace("\\", "/")
                 })
