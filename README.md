@@ -1,6 +1,9 @@
 inline-assets-rs
 =====
 [![Build Status](https://travis-ci.org/Hand-of-Cthulhu/inline-assets-rs.svg?branch=master)](https://travis-ci.org/Hand-of-Cthulhu/inline-assets-rs)
+[![Crates.io](https://meritbadge.herokuapp.com/inline-assets)](https://crates.io/crates/inline-assets)
+[![Docs.rs](https://docs.rs/inline_assets/badge.svg)](https://docs.rs/inline_assets/)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/Hand-of-Cthulhu/inline-assets-rs/master/LICENSE)
 
 A Rust library for inlining Javascript, CSS, and font files into your html files for easy distribution.
 This also changes `url(local_path)` in the css to be relative to the html file.
