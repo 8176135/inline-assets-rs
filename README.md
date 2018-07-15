@@ -12,9 +12,12 @@ Originally intended to be used in build scripts of [web_view](https://github.com
 The output can also be able to be piped into [minifier-rs](https://github.com/GuillaumeGomez/minifier-rs) to save space.
 
 ### Usage:
-Usage is really simple, just call `inline_html_string(file_path, inline_fonts)`, with the html file path,
- and whether you want to embed the fonts as base64 in the css.
- 
+Usage is really simple, just call `inline_assets::inline_html_string(file_path, inline_assets::Config::default())`, with the html file path. 
+
+The config currently provides 2 options (with the default being both enabled):
+* `inline_fonts`: Whether or not to inline fonts in the css as base64.
+* `remove_new_lines`:  Replace `\r` and `\r\n` with a space character. Useful to keep line numbers the same in the output to help with debugging.
+
 Look in the example folder for a CLI binary example.
 
 All font files should work if font format is set correctly. i.e.`src: url(font-file) format(font-format)`

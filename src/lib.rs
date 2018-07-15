@@ -26,7 +26,7 @@ pub enum FilePathError {
 pub struct Config {
     /// Whether or not to inline fonts in the css as base64.
     pub inline_fonts: bool,
-    /// Replace `\r` and `\r\n` with a space character
+    /// Replace `\r` and `\r\n` with a space character. Useful to keep line numbers the same in the output to help with debugging.
     pub remove_new_lines: bool,
 }
 
