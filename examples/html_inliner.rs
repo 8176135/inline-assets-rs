@@ -13,5 +13,5 @@ fn main() {
             .help("HTML file path")
             .index(1).required(true)).get_matches();
 
-    println!("{}", inline_assets::inline_file(matches.value_of("html").unwrap(), matches.occurrences_of("embed-font") == 1).unwrap());
+    println!("{}", inline_assets::inline_file(matches.value_of("html").unwrap(), inline_assets::Config { inline_fonts: matches.occurrences_of("embed-font") == 1, ..Default::default()}).unwrap());
 }
