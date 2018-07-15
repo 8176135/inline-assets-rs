@@ -19,13 +19,19 @@ pub enum FilePathError {
     RepeatedFile,
 }
 
+/// Config struct that is passed to `inline_file()` and `inline_html_string()`
+///
+/// Default enables everything
 #[derive(Debug, Copy, Clone)]
 pub struct Config {
+    /// Whether or not to inline fonts in the css as base64.
     pub inline_fonts: bool,
+    /// Replace `\r` and `\r\n` with a space character
     pub remove_new_lines: bool,
 }
 
 impl Default for Config {
+    /// Enables everything
     fn default() -> Config {
         Config { inline_fonts: true, remove_new_lines: true }
     }
@@ -82,7 +88,7 @@ impl From<std::io::Error> for FilePathError {
 ///
 /// ## Arguments
 /// * `file_path` - The path of the html file.
-/// * `inline_fonts` - Whether or not to inline fonts in the css as base64.
+/// * `inline_fonts` - Pass a config file to select what features to enable. Use `Default::default()` to enable everything
 pub fn inline_file<P: AsRef<Path>>(
     file_path: P,
     config: Config,
@@ -97,7 +103,7 @@ pub fn inline_file<P: AsRef<Path>>(
 /// ## Arguments
 /// * `html` - The html string.
 /// * `root_path` - The root all relative paths in the html will be evaluated with, usually this is the folder the html file is in.
-/// * `inline_fonts` - Whether or not to inline fonts in the css as base64.
+/// * `config` - Pass a config file to select what features to enable. Use `Default::default()` to enable everything
 ///
 pub fn inline_html_string<P: AsRef<Path>>(
     html: &str,
