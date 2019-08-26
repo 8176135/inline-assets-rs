@@ -118,8 +118,8 @@ pub fn inline_html_string<P: AsRef<Path>>(
 	root_path: P,
 	config: Config,
 ) -> Result<String, FilePathError> {
-	let root_path = root_path.as_ref();
-
+	// FIXME: make actual error return
+	let root_path = root_path.as_ref().canonicalize().unwrap();
 	let document = kuchiki::parse_html().one(html);
 
 	let mut css_path_set = HashSet::new();
@@ -137,8 +137,13 @@ pub fn inline_html_string<P: AsRef<Path>>(
 			"script" => {
 				let mut text_attr = node.attributes.borrow_mut();
 				if let Some(c) = text_attr.get("src") {
-					let script_path =
-						root_path.join(PathBuf::from_str(c).expect("script src not valid path"));
+					let sub_script_path = PathBuf::from_str(c).expect("script src not valid path");
+					let script_path = if sub_script_path.is_absolute() {
+						sub_script_path
+					} else {
+						root_path.join(sub_script_path)
+					};
+
 					text_attr.remove("src");
 					as_node.append(NodeRef::new_text(
 						fs::read_to_string(&script_path).map_err(|e| {
@@ -164,7 +169,7 @@ pub fn inline_html_string<P: AsRef<Path>>(
 					out
 				};
 
-				if let Ok(css) = inline_css(css_path, &mut css_path_set) {
+				if let Ok(css) = inline_css(css_path, &root_path, &mut css_path_set) {
 					let elem_to_add = NodeRef::new_element(
 						html5ever::QualName::new(None, ns!(html), "style".into()),
 						None,
@@ -173,6 +178,8 @@ pub fn inline_html_string<P: AsRef<Path>>(
 					elem_to_add.append(NodeRef::new_text(css));
 					as_node.insert_after(elem_to_add);
 					to_delete_vec.push(css_match);
+				} else {
+					panic!("asdasd");
 				}
 			}
 			_ => {}
@@ -186,18 +193,21 @@ pub fn inline_html_string<P: AsRef<Path>>(
 	dbg!(Ok(document.to_string()))
 }
 
-fn inline_css<P: AsRef<Path>>(
+fn inline_css<P: AsRef<Path>, P2: AsRef<Path>>(
 	css_path: P,
+	root_path: P2,
 	path_set: &mut HashSet<std::path::PathBuf>,
 ) -> Result<String, FilePathError> {
-	let css_path = css_path.as_ref();
-	if !path_set.insert(
-		css_path
-			.canonicalize()
-			.map_err(|e| FilePathError::from_elem(e, css_path.to_str().unwrap()))?,
-	) {
+	let css_path = css_path.as_ref().canonicalize().map_err(|e| FilePathError::from_elem(e, css_path.as_ref().to_str().unwrap()))?;
+	if !path_set.insert(css_path.clone()) {
+		dbg!(css_path);
 		return Err(FilePathError::RepeatedFile);
 	}
+
+//	let css_data = fs::read_to_string(&css_path)
+//		.map_err(|e| FilePathError::from_elem(e, css_path.to_str().unwrap()))?;
+
+	let comment_remover = regex::Regex::new(r#"/\*[^*]*\*+(?:[^/*][^*]*\*+)*/"#).unwrap();
 
 	// Some optimisation could be done here if we don't initialize these every single time.
 	let css_finder: regex::Regex =
@@ -209,8 +219,11 @@ fn inline_css<P: AsRef<Path>>(
 		.replace_all(
 			url_finder
 				.replace_all(
-					&fs::read_to_string(&css_path)
-						.map_err(|e| FilePathError::from_elem(e, css_path.to_str().unwrap()))?,
+					comment_remover
+						.replace_all(&fs::read_to_string(&css_path)
+							.map_err(|e| FilePathError::from_elem(e, css_path.to_str().unwrap()))?, |_: &Captures| "".to_owned())
+						.as_ref(),
+//				&fs::read_to_string(&css_path).map_err(|e| FilePathError::from_elem(e, css_path.to_str().unwrap()))?,
 					|caps: &Captures| {
 						if caps[1].len() > 1500 || caps[1].contains("data:") {
 							// Probably not a path if longer than 1500 characters
@@ -221,10 +234,12 @@ fn inline_css<P: AsRef<Path>>(
 							if (caps[1].as_ref() as &str).contains("://") {
 								caps[1].to_owned()
 							} else {
-								css_path
-									.parent()
+								pathdiff::diff_paths(css_path
+														 .parent()
+														 .unwrap()
+														 .join(&caps[1]).as_path(), root_path.as_ref())
 									.unwrap()
-									.join(&caps[1])
+									.as_path()
 									.to_str()
 									.expect("Path not UTF-8")
 									.replace("\\", "/")
@@ -234,7 +249,7 @@ fn inline_css<P: AsRef<Path>>(
 				)
 				.as_ref(),
 			|caps: &Captures| {
-				match inline_css(&caps[1], path_set) {
+				match inline_css(root_path.as_ref().join(&caps[1]), root_path.as_ref(), path_set) {
 					Ok(out) => out,
 					Err(FilePathError::RepeatedFile) => {
 						"".to_owned() // Ignore repeated file
