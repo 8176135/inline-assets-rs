@@ -124,6 +124,8 @@ pub fn inline_html_string<P: AsRef<Path>>(
 
 	let mut css_path_set = HashSet::new();
 
+	let mut to_delete_vec = Vec::new();
+
 	for css_match in document.select("script, link").unwrap() {
 		// css_match is a NodeDataRef, but most of the interesting methods are
 		// on NodeRef. Let's get the underlying NodeRef.
@@ -159,7 +161,6 @@ pub fn inline_html_string<P: AsRef<Path>>(
 					} else {
 						continue;
 					};
-					text_attr.insert("inline-marked-for-deletion", "true".to_owned());
 					out
 				};
 
@@ -171,24 +172,15 @@ pub fn inline_html_string<P: AsRef<Path>>(
 
 					elem_to_add.append(NodeRef::new_text(css));
 					as_node.insert_after(elem_to_add);
+					to_delete_vec.push(css_match);
 				}
 			}
 			_ => {}
 		}
 	}
 
-	loop {
-		let mut changed = false;
-		for css_match in document
-			.select("link[inline-marked-for-deletion='true']")
-			.unwrap()
-		{
-			css_match.as_node().detach();
-			changed = true;
-		}
-		if !changed {
-			break;
-		}
+	for css_match in to_delete_vec {
+		css_match.as_node().detach();
 	}
 
 	dbg!(Ok(document.to_string()))
