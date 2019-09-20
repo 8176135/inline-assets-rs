@@ -127,8 +127,6 @@ pub fn inline_html_string<P: AsRef<Path>>(
 	let mut to_delete_vec = Vec::new();
 
 	for css_match in document.select("script, link").unwrap() {
-		// css_match is a NodeDataRef, but most of the interesting methods are
-		// on NodeRef. Let's get the underlying NodeRef.
 		let as_node = css_match.as_node();
 
 		let node = as_node.as_element().unwrap();
@@ -223,7 +221,6 @@ fn inline_css<P: AsRef<Path>, P2: AsRef<Path>>(
 						.replace_all(&fs::read_to_string(&css_path)
 							.map_err(|e| FilePathError::from_elem(e, css_path.to_str().unwrap()))?, |_: &Captures| "".to_owned())
 						.as_ref(),
-//				&fs::read_to_string(&css_path).map_err(|e| FilePathError::from_elem(e, css_path.to_str().unwrap()))?,
 					|caps: &Captures| {
 						if caps[1].len() > 1500 || caps[1].contains("data:") {
 							// Probably not a path if longer than 1500 characters
