@@ -188,7 +188,7 @@ pub fn inline_html_string<P: AsRef<Path>>(
 		css_match.as_node().detach();
 	}
 
-	dbg!(Ok(document.to_string()))
+	Ok(document.to_string())
 }
 
 fn inline_css<P: AsRef<Path>, P2: AsRef<Path>>(
