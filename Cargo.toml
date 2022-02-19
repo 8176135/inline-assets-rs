@@ -18,6 +18,7 @@ maintenance = { status = "looking-for-maintainer" }
 
 [[example]]
 name = "html_inliner"
+path = "examples/html_inliner.rs"
 
 [lib]
 name = "inline_assets"
