@@ -1,7 +1,88 @@
 ---
-created: "2019-08-26T23:00:41.986799400Z"
-creator: insta@0.10.1
 source: tests/test.rs
-expression: "inline_assets::inline_file(\"examples/resources/listener_screen_css_import.html\",\n                           inline_assets::Config{remove_new_lines: false,\n                                                 inline_fonts:\n                                                     false,}).unwrap()"
+assertion_line: 38
+expression: res
+
 ---
-"<html><head>\n    <style>\n@font-face {\n    font-family: \'source-sans-black\';\n    src: url(another_sub_dir/../SourceSansPro-Black.otf) format(\"woff\");\n}\n\nbody {\n    background-image: url(https://i.imgur.com/SoqAxJR.png);\n}\n\n@font-face {\n    font-family: \'source-sans\';\n    src: url(another_sub_dir/sourcesanspro-regular-webfont.woff2) format(\"woff\");\n}\n\nbody {\n    font-family: \"source-sans\", serif;\n    font-size: 10pt;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n\n    background-color: #CCC;\n    color: #222;\n}\n\np {\n    cursor: default;\n}\n\n#port_num {\n    width: 50px;\n}\n\nbutton {\n    width: auto;\n    left: 5px;\n    right: 5px;\n    bottom: 5px;\n    position: absolute;\n    border: none;\n    background-color: #7d81ff;\n    color: #EEE;\n}\n\nbutton:hover {\n    background-color: #a9a7ff\n}\n\ninput, label {\n    display: block;\n}\n\n#is_connected {\n    margin-left: 20px;\n    font-family: Consolas, monospace;\n}</style>\n</head>\n<body>\n<p style=\"overflow:hidden; max-height: 43px\"><b>Status: </b> <span id=\"is_connected\">Not listening</span></p>\n<form>\n    <label for=\"port_num\">Port:</label>\n    <input id=\"port_num\" max=\"65500\" min=\"1\" name=\"port_num\" placeholder=\"13111\" type=\"number\">\n    <br><br>\n    <button onclick=\"external.invoke(\'listen \' + valOrPlaceholder(document.getElementById(\'port_num\')))\" type=\"submit\">Listen</button>\n</form>\n<script>function valOrPlaceholder(item) {\n    if (item.value) {\n        return item.value;\n    } else {\n        return item.placeholder;\n    }\n}</script>\n<script type=\"text/javascript\">\n    function showConnectedMsg(e) {\n        document.getElementById(\'is_connected\').innerHTML = e;\n    }\n</script>\n\n</body></html>"
+<html><head>
+    <style>
+@font-face {
+    font-family: 'source-sans-black';
+    src: url(another_sub_dir/../SourceSansPro-Black.otf) format("woff");
+}
+
+body {
+    background-image: url(https://i.imgur.com/SoqAxJR.png);
+}
+
+@font-face {
+    font-family: 'source-sans';
+    src: url(another_sub_dir/sourcesanspro-regular-webfont.woff2) format("woff");
+}
+
+body {
+    font-family: "source-sans", serif;
+    font-size: 10pt;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    background-color: #CCC;
+    color: #222;
+}
+
+p {
+    cursor: default;
+}
+
+#port_num {
+    width: 50px;
+}
+
+button {
+    width: auto;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    position: absolute;
+    border: none;
+    background-color: #7d81ff;
+    color: #EEE;
+}
+
+button:hover {
+    background-color: #a9a7ff
+}
+
+input, label {
+    display: block;
+}
+
+#is_connected {
+    margin-left: 20px;
+    font-family: Consolas, monospace;
+}</style>
+</head>
+<body>
+<p style="overflow:hidden; max-height: 43px"><b>Status: </b> <span id="is_connected">Not listening</span></p>
+<form>
+    <label for="port_num">Port:</label>
+    <input id="port_num" max="65500" min="1" name="port_num" placeholder="13111" type="number">
+    <br><br>
+    <button onclick="external.invoke('listen ' + valOrPlaceholder(document.getElementById('port_num')))" type="submit">Listen</button>
+</form>
+<script>function valOrPlaceholder(item) {
+    if (item.value) {
+        return item.value;
+    } else {
+        return item.placeholder;
+    }
+}</script>
+<script type="text/javascript">
+    function showConnectedMsg(e) {
+        document.getElementById('is_connected').innerHTML = e;
+    }
+</script>
+
+</body></html>

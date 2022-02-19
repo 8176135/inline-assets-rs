@@ -121,7 +121,7 @@ pub fn inline_html_string<P: AsRef<Path>>(
 	// FIXME: make actual error return
 	let root_path = root_path.as_ref().canonicalize().unwrap();
 	let document = kuchiki::parse_html().one(html);
-
+	
 	let mut css_path_set = HashSet::new();
 
 	let mut to_delete_vec = Vec::new();
@@ -167,18 +167,17 @@ pub fn inline_html_string<P: AsRef<Path>>(
 					out
 				};
 
-				if let Ok(css) = inline_css(css_path, &root_path, &mut css_path_set) {
-					let elem_to_add = NodeRef::new_element(
-						html5ever::QualName::new(None, ns!(html), "style".into()),
-						None,
-					);
+				let css = inline_css(css_path, &root_path, &mut css_path_set)
+					.expect("Failed to inline css");
 
-					elem_to_add.append(NodeRef::new_text(css));
-					as_node.insert_after(elem_to_add);
-					to_delete_vec.push(css_match);
-				} else {
-					panic!("asdasd");
-				}
+				let elem_to_add = NodeRef::new_element(
+					html5ever::QualName::new(None, ns!(html), "style".into()),
+					None,
+				);
+
+				elem_to_add.append(NodeRef::new_text(css));
+				as_node.insert_after(elem_to_add);
+				to_delete_vec.push(css_match);
 			}
 			_ => {}
 		}
@@ -188,7 +187,15 @@ pub fn inline_html_string<P: AsRef<Path>>(
 		css_match.as_node().detach();
 	}
 
-	Ok(document.to_string())
+	let answer = document.to_string()
+	// Use new unix style newline
+		.replace("\r\n", "\n");
+	
+	Ok(if config.remove_new_lines {
+		answer.replace("\r\n", " ").replace("\n", " ")
+	} else {
+		answer
+	})
 }
 
 fn inline_css<P: AsRef<Path>, P2: AsRef<Path>>(
@@ -196,14 +203,16 @@ fn inline_css<P: AsRef<Path>, P2: AsRef<Path>>(
 	root_path: P2,
 	path_set: &mut HashSet<std::path::PathBuf>,
 ) -> Result<String, FilePathError> {
-	let css_path = css_path.as_ref().canonicalize().map_err(|e| FilePathError::from_elem(e, css_path.as_ref().to_str().unwrap()))?;
+	let css_path = css_path
+		.as_ref()
+		.canonicalize()
+		.map_err(|e| FilePathError::from_elem(e, css_path.as_ref().to_str().unwrap()))?;
 	if !path_set.insert(css_path.clone()) {
-		dbg!(css_path);
 		return Err(FilePathError::RepeatedFile);
 	}
 
-//	let css_data = fs::read_to_string(&css_path)
-//		.map_err(|e| FilePathError::from_elem(e, css_path.to_str().unwrap()))?;
+	//	let css_data = fs::read_to_string(&css_path)
+	//		.map_err(|e| FilePathError::from_elem(e, css_path.to_str().unwrap()))?;
 
 	let comment_remover = regex::Regex::new(r#"/\*[^*]*\*+(?:[^/*][^*]*\*+)*/"#).unwrap();
 
@@ -218,8 +227,12 @@ fn inline_css<P: AsRef<Path>, P2: AsRef<Path>>(
 			url_finder
 				.replace_all(
 					comment_remover
-						.replace_all(&fs::read_to_string(&css_path)
-							.map_err(|e| FilePathError::from_elem(e, css_path.to_str().unwrap()))?, |_: &Captures| "".to_owned())
+						.replace_all(
+							&fs::read_to_string(&css_path).map_err(|e| {
+								FilePathError::from_elem(e, css_path.to_str().unwrap())
+							})?,
+							|_: &Captures| "".to_owned(),
+						)
 						.as_ref(),
 					|caps: &Captures| {
 						if caps[1].len() > 1500 || caps[1].contains("data:") {
@@ -231,22 +244,26 @@ fn inline_css<P: AsRef<Path>, P2: AsRef<Path>>(
 							if (caps[1].as_ref() as &str).contains("://") {
 								caps[1].to_owned()
 							} else {
-								pathdiff::diff_paths(css_path
-														 .parent()
-														 .unwrap()
-														 .join(&caps[1]).as_path(), root_path.as_ref())
-									.unwrap()
-									.as_path()
-									.to_str()
-									.expect("Path not UTF-8")
-									.replace("\\", "/")
+								pathdiff::diff_paths(
+									css_path.parent().unwrap().join(&caps[1]).as_path(),
+									root_path.as_ref(),
+								)
+								.unwrap()
+								.as_path()
+								.to_str()
+								.expect("Path not UTF-8")
+								.replace("\\", "/")
 							}
 						)
 					},
 				)
 				.as_ref(),
 			|caps: &Captures| {
-				match inline_css(root_path.as_ref().join(&caps[1]), root_path.as_ref(), path_set) {
+				match inline_css(
+					root_path.as_ref().join(&caps[1]),
+					root_path.as_ref(),
+					path_set,
+				) {
 					Ok(out) => out,
 					Err(FilePathError::RepeatedFile) => {
 						"".to_owned() // Ignore repeated file

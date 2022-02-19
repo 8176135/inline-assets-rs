@@ -4,35 +4,40 @@ extern crate inline_assets;
 use pretty_assertions::{assert_eq, assert_ne};
 
 #[cfg(test)]
-use insta::assert_debug_snapshot_matches;
+use insta::assert_snapshot;
 
 #[test]
 fn basic() {
-    assert_debug_snapshot_matches!(
+
+	let res = inline_assets::inline_file(
+		"examples/resources/listener_screen.html",
+		inline_assets::Config {
+			remove_new_lines: false,
+			inline_fonts: false
+		}
+	)
+	.unwrap();
+	println!("{}", res);
+    assert_snapshot!(
         "listener_screen_basic",
-		inline_assets::inline_file(
-			"examples/resources/listener_screen.html",
-			inline_assets::Config {
-				remove_new_lines: false,
-				inline_fonts: false
-			}
-		)
-		.unwrap()
+		res
 	);
 }
 
 #[test]
 fn css_import_and_http() {
-	assert_debug_snapshot_matches!(
+	let res = inline_assets::inline_file(
+		"examples/resources/listener_screen_css_import.html",
+		inline_assets::Config {
+			remove_new_lines: false,
+			inline_fonts: false,
+		}
+	)
+	.unwrap();
+	println!("{}", res);
+	assert_snapshot!(
 		"listener_screen_css_import",
-		inline_assets::inline_file(
-			"examples/resources/listener_screen_css_import.html",
-			inline_assets::Config {
-				remove_new_lines: false,
-				inline_fonts: false,
-			}
-		)
-		.unwrap()
+		res
 	);
 }
 
