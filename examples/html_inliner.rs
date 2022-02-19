@@ -1,6 +1,3 @@
-extern crate clap;
-extern crate inline_assets;
-
 fn main() {
 	let matches = clap::App::new("HTML_Inliner")
 		.version("0.1")
