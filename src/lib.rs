@@ -33,6 +33,7 @@ pub enum FilePathError {
 #[derive(Debug, Copy, Clone)]
 pub struct Config {
 	/// Whether or not to inline fonts in the css as base64.
+	/// Currently has no effect
 	pub inline_fonts: bool,
 	/// Replace `\r` and `\r\n` with a space character. Useful to keep line numbers the same in the output to help with debugging.
 	pub remove_new_lines: bool,
@@ -42,7 +43,7 @@ impl Default for Config {
 	/// Enables everything
 	fn default() -> Config {
 		Config {
-			inline_fonts: true,
+			inline_fonts: false,
 			remove_new_lines: true,
 		}
 	}
@@ -191,6 +192,10 @@ pub fn inline_html_string<P: AsRef<Path>>(
 	// Use new unix style newline
 		.replace("\r\n", "\n");
 	
+	if config.inline_fonts {
+		eprintln!("Inline font option not implemented yet");
+	}
+
 	Ok(if config.remove_new_lines {
 		answer.replace("\r\n", " ").replace("\n", " ")
 	} else {
